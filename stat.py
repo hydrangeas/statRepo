@@ -17,6 +17,14 @@ local_results = './results/'
 repositry_path = ""
 #repositry_name = ""
 
+def newdir(path):
+    # 存在してたら消す
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    # ディレクトリを作る
+    os.makedirs(path)
+    return
+
 def main():
     global repositry_path
     if len(sys.argv) > 1:
@@ -53,19 +61,13 @@ def getrepositry(repositry_path, repositry_name):
     global local_repositry
     local_repositry = os.path.join(local_repositry, repositry_name)
 
-
     global repo
     try:
-        # 存在してたら消す
-        #if os.path.isdir(local_repositry):
-        #    shutil.rmtree(local_repositry)
-        # TODO:存在していたらリビジョンを確認して、最新にする
         if os.path.isdir(local_repositry):
             repo = git.Repo(local_repositry)
             return
 
-        # ディレクトリを作る
-        os.makedirs(local_repositry)
+        newdir(local_repositry)
         # cloneしてくる
         repo = git.Repo.clone_from(repositry_path, local_repositry, branch='master')
     except:
@@ -77,15 +79,22 @@ def stat(repositry_name):
     global local_results
     local_results = os.path.join(local_results + repositry_name)
     try:
-        # 存在してたら消す
-        if os.path.isdir(local_results):
-            shutil.rmtree(local_results)
-        # ディレクトリを作る
-        os.makedirs(local_results)
+        # 結果用のディレクトリを作成する
+        newdir(local_results)
 
         # リビジョン
-        for item in repo.iter_commits('master', max_count=100):
-            print (item.hexsha)
+        for item in repo.iter_commits('master', max_count=2):
+            print('-----')
+            print(item.hexsha)
+            print(item.stats.files)
+
+            # 一つ前のリビジョンを取得する
+            parent = item.parents[0]
+            for d in parent.diff(item, create_patch=True):
+                print(d.diff.decode('utf-8'))
+
+            hashpath = os.path.join(local_results, item.hexsha)
+            newdir(hashpath)
     except:
         import traceback
         traceback.print_exc()
