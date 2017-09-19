@@ -86,8 +86,13 @@ def stat(repositry_name):
         # 履歴を取得する
         for item in repo.iter_commits('master', max_count=2):
 
+            # 一つ前が存在しない場合は終了する
+            if (len(item.parents) == 0):
+                break
+
             # 一つ前のリビジョンを取得する
             parent = item.parents[0]
+
             # ハッシュ値を元にディレクトリを作成する
             hashpath = os.path.join(local_results, item.hexsha)
             newdir(hashpath)
