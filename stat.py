@@ -81,20 +81,42 @@ def stat(repositry_name):
     try:
         # 結果用のディレクトリを作成する
         newdir(local_results)
+        diffheader = '"LOF", "name"\n'
 
-        # リビジョン
+        # 履歴を取得する
         for item in repo.iter_commits('master', max_count=2):
-            print('-----')
-            print(item.hexsha)
-            print(item.stats.files)
 
             # 一つ前のリビジョンを取得する
             parent = item.parents[0]
-            for d in parent.diff(item, create_patch=True):
-                print(d.diff.decode('utf-8'))
-
+            # ハッシュ値を元にディレクトリを作成する
             hashpath = os.path.join(local_results, item.hexsha)
             newdir(hashpath)
+
+            # 一つ前と現在のリビジョンの差分を取得する
+            diffcsv = diffheader
+            for d in parent.diff(item, create_patch=True):
+                # 差分文字列を逆順で処理する
+                diffstr = d.diff.decode('utf-8')
+                diffstr = diffstr.splitlines()
+                diffstr.reverse()
+
+                # '+':変更行数をカウント
+                # '@':関数とマッピング
+                changed_line = 0
+                for s in diffstr:
+                    if s.find('+') == 0:
+                        changed_line = changed_line + 1
+                    elif s.find('@@') == 0:
+                        #print("{0},{1}".format(changed_line, s.split('@@ ')[2]))
+                        diffcsv = diffcsv + '"{0}","{1}"\n'.format(changed_line, s.split('@@ ')[2])
+
+            # TODO: 差分用ファイルを変更できるようにする
+            difffile = os.path.join(hashpath, 'diff.csv')
+            # ファイル書き込み
+            f = open(difffile, 'w')
+            f.write(diffcsv)
+            f.close()
+
     except:
         import traceback
         traceback.print_exc()
