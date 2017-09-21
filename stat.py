@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#-*- coding: utf-8 -*-
 #
 # usage:
 """
@@ -24,6 +25,13 @@ def newdir(path):
     # ディレクトリを作る
     os.makedirs(path)
     return
+
+# ref from http://qiita.com/suin/items/cdef17e447ceeff6e79d
+def find_all_files(directory):
+    for root, dirs, files in os.walk(directory):
+        yield root
+        for file in files:
+            yield os.path.join(root, file)
 
 def main():
     global repositry_path
@@ -111,8 +119,7 @@ def stat(repositry_name):
                 for s in diffstr:
                     if s.find('+') == 0:
                         changed_line = changed_line + 1
-                    elif s.find('@@') == 0:
-                        #print("{0},{1}".format(changed_line, s.split('@@ ')[2]))
+                    elif s.find('@@') == 0 and len(s.split('@@ ')) > 2:
                         diffcsv = diffcsv + '"{0}","{1}"\n'.format(changed_line, s.split('@@ ')[2])
 
             # TODO: 差分用ファイルを変更できるようにする
@@ -122,6 +129,23 @@ def stat(repositry_name):
             f.write(diffcsv)
             f.close()
 
+            # 一つ前のリビジョンに戻す
+            repo.git.checkout(parent.hexsha, force=True)
+
+            # CCCC対象ファイルを探す
+            cfiles = []
+            for file in find_all_files(local_repositry):
+                # Cファイルのみ対象とする
+                # TODO: ヘッダファイルの解析を検討する
+                if file.endswith('.c'):
+                    cfiles.append(file)
+            # CCCC実行
+            command = 'cccc {0} --outdir={1} >/dev/null 2>&1'
+            os.system(command.format(' '.join(cfiles), os.path.join(hashpath, 'cccc')))
+
+        # リビジョンをmasterに戻す
+        # master以外は考慮しない
+        repo.git.checkout('master', force=True)
     except:
         import traceback
         traceback.print_exc()
