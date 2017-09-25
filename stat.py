@@ -140,8 +140,20 @@ def stat(repositry_name):
                 if file.endswith('.c'):
                     cfiles.append(file)
             # CCCC実行
+            ccccdir = os.path.join(hashpath, 'cccc')
             command = 'cccc {0} --outdir={1} >/dev/null 2>&1'
-            os.system(command.format(' '.join(cfiles), os.path.join(hashpath, 'cccc')))
+            os.system(command.format(' '.join(cfiles), ccccdir))
+
+            # CCCC結果 XML->CSV
+            ccccfile = os.path.join(ccccdir, 'cccc.csv')
+            #command = 'python3 cccc2csv.py --l {0} --s {1} >/dev/null 2>&1'
+            command = 'python3 cccc2csv.py --l {0} --s {1}'
+            os.system(command.format(ccccdir, ccccfile))
+
+            mergedfile = os.path.join(hashpath, 'merged.csv')
+            #command = 'python3 {0} --l1 {1} --l2 {2} --s {3} >/dev/null 2>&1'
+            command = 'python3 {0} --l1 {1} --l2 {2} --s {3}'
+            os.system(command.format('mergecsv.py', ccccfile, difffile, mergedfile))
 
         # リビジョンをmasterに戻す
         # master以外は考慮しない
