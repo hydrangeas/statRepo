@@ -37,20 +37,24 @@ def main():
         print('{0}が存在しません'.format(load_path2))
         return
 
-    # CSVファイル読み込み
-    df1 = pd.read_csv(load_path1)
-    df2 = pd.read_csv(load_path2)
+    try:
+        # CSVファイル読み込み
+        df1 = pd.read_csv(load_path1)
+        df2 = pd.read_csv(load_path2)
 
-    # nameが同じならLOFを移送
-    for i, cccc in df1.iterrows():
-        for j, diff in df2.iterrows():
-            # 関数名だけ抽出
-            ccccFunc = cccc['name'].split('(')[0]
-            diffFunc = cccc['name'].split('(')[0]
-            if ccccFunc == diffFunc:
-                df1.ix[i, 'LOF'] = df2.ix[j, 'LOF']
+        # nameが同じならLOFを移送
+        for i, cccc in df1.iterrows():
+            for j, diff in df2.iterrows():
+                # 関数名だけ抽出
+                ccccFunc = cccc['name'].split('(')[0]
+                diffFunc = diff['name'].split('(')[0]
+                if ccccFunc == diffFunc:
+                    df1.ix[i, 'LOF'] = df2.ix[j, 'LOF']
 
-    df1.to_csv(path_or_buf=save_path, index=False, quoting=csv.QUOTE_ALL)
+        df1.to_csv(path_or_buf=save_path, index=False, quoting=csv.QUOTE_ALL)
+    except:
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     ret = main()
