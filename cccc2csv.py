@@ -28,20 +28,21 @@ g_f = None
 g_o_def = ['name', 'MVG', 'LOF', 'module', 'LOC', 'COM', 'declaration', 'definition']
 
 def usage():
-    print """
-＜＜＜%s の使用方法＞＞＞
+    print("""
+＜＜＜{0} の使用方法＞＞＞
 cccc.exeを呼び出した後、'.cccc'フォルダが出来る。
 メトリクス集計された'*.xml'を読み出し、CSVファイル化する。
 
 --l ['.cccc'フォルダの場所を指定する('.cccc'がデフォルト)]
 --s [結果を保存するCSVファイル名] : 指定しないと標準出力する
 --help or /? : 使い方の説明
-""" % (sys.argv[0])
+""".format(sys.argv[0]))
 
 def prt(msg):
     """g_fに対して、文字列を書き込む"""
-    if g_f == None:     print msg
-    else:               print >>g_f, msg
+    if g_f == None:     print(msg)
+    #else:               print >>g_f, msg
+    else:               print(msg, file=g_f)
 
 def prt_head(keys):
     """g_fに対して、ヘッダ行相当を書き込む"""
@@ -49,8 +50,9 @@ def prt_head(keys):
     s = ""
     for k in keys:
         s = s + "," + ('"%s"' % k)
-    if g_f == None:     print s[1:]
-    else:               print >>g_f, s[1:]
+    if g_f == None:     print(s[1:])
+    #else:               print >>g_f, s[1:]
+    else:               print(s[1:], file=g_f)
 
 def prt_line(o, keys):
     """g_fに対して、中身相当を書き込む"""
@@ -58,8 +60,8 @@ def prt_line(o, keys):
     s = ""
     for k in keys:
         s = s + "," + ('"%s"' % o.get(k, ''))
-    if g_f == None:     print s[1:]
-    else:               print >>g_f, s[1:]
+    if g_f == None:     print(s[1:])
+    else:               print(s[1:], file=g_f)
 
 def project_summary(fpath):
     """プロジェクトの概要を書き出す
@@ -121,7 +123,7 @@ def main():
         i = 1
         while i < len(sys.argv):
             s = sys.argv[i]
-            print i, "=", s
+            #print("{0}:{1}".format(i, s))
             i = i + 1
             if s == "--l":      load_dir = sys.argv[i]
             elif s == "--s":    save_path = sys.argv[i]
@@ -133,12 +135,13 @@ def main():
     
     if len(save_path) != 0:
         global g_f
-        g_f = file(save_path, 'w')
+        g_f = open(save_path, 'w')
     
     try:
         # プロジェクトの概要(cccc.xml)を書き出す
-        project_summary(load_dir + "\\cccc.xml")
-        prt("")
+        #project_summary(load_dir + "\\cccc.xml")
+        #project_summary(os.path.join(load_dir, 'cccc.xml'))
+        #prt("")
 
         # 全てのモジュールの詳細(*.xml)を書き出す
         prt_head(g_o_def)
@@ -147,7 +150,7 @@ def main():
                 if fnmatch.fnmatch(fname, "*.xml"):
                     if fname != "cccc.xml":
                         fpath = os.path.join(root, fname)
-                        print fpath
+                        print(fpath)
                         xml_parse(fpath)
     finally:
         if g_f != None:
