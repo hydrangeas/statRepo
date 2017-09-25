@@ -89,10 +89,10 @@ def stat(repositry_name):
     try:
         # 結果用のディレクトリを作成する
         newdir(local_results)
-        diffheader = '"LOF", "name"\n'
+        diffheader = '"LOF","name"\n'
 
         # 履歴を取得する
-        for item in repo.iter_commits('master', max_count=2):
+        for item in repo.iter_commits('master', max_count=10000):
 
             # 一つ前が存在しない場合は終了する
             if (len(item.parents) == 0):
@@ -107,7 +107,7 @@ def stat(repositry_name):
 
             # 一つ前と現在のリビジョンの差分を取得する
             diffcsv = diffheader
-            for d in parent.diff(item, create_patch=True):
+            for d in parent.diff(item, create_patch=True, paths='*.c'):
                 # 差分文字列を逆順で処理する
                 diffstr = d.diff.decode('utf-8')
                 diffstr = diffstr.splitlines()
@@ -121,6 +121,7 @@ def stat(repositry_name):
                         changed_line = changed_line + 1
                     elif s.find('@@') == 0 and len(s.split('@@ ')) > 2:
                         diffcsv = diffcsv + '"{0}","{1}"\n'.format(changed_line, s.split('@@ ')[2])
+                        changed_line = 0
 
             # TODO: 差分用ファイルを変更できるようにする
             difffile = os.path.join(hashpath, 'diff.csv')
@@ -146,14 +147,14 @@ def stat(repositry_name):
 
             # CCCC結果 XML->CSV
             ccccfile = os.path.join(ccccdir, 'cccc.csv')
-            #command = 'python3 cccc2csv.py --l {0} --s {1} >/dev/null 2>&1'
-            command = 'python3 cccc2csv.py --l {0} --s {1}'
+            command = 'python3 cccc2csv.py --l {0} --s {1} >/dev/null 2>&1'
             os.system(command.format(ccccdir, ccccfile))
 
             mergedfile = os.path.join(hashpath, 'merged.csv')
-            #command = 'python3 {0} --l1 {1} --l2 {2} --s {3} >/dev/null 2>&1'
-            command = 'python3 {0} --l1 {1} --l2 {2} --s {3}'
+            command = 'python3 {0} --l1 {1} --l2 {2} --s {3} >/dev/null 2>&1'
             os.system(command.format('mergecsv.py', ccccfile, difffile, mergedfile))
+
+            print('{0}..Done'.format(item.hexsha))
 
         # リビジョンをmasterに戻す
         # master以外は考慮しない
