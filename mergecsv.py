@@ -43,11 +43,12 @@ def main():
 
     # nameが同じならLOFを移送
     for i, cccc in df1.iterrows():
-        # 関数名だけ抽出
-        ccccFunc = cccc['name'].split('(')[0]
-        diffFunc = cccc['name'].split('(')[0]
-        if ccccFunc == diffFunc:
-            df1.ix[i, 'LOF'] = df2.ix[j, 'LOF']
+        for j, diff in df2.iterrows():
+            # 関数名だけ抽出
+            ccccFunc = cccc['name'].split('(')[0]
+            diffFunc = cccc['name'].split('(')[0]
+            if ccccFunc == diffFunc:
+                df1.ix[i, 'LOF'] = df2.ix[j, 'LOF']
 
     df1.to_csv(path_or_buf=save_path, index=False, quoting=csv.QUOTE_ALL)
 
